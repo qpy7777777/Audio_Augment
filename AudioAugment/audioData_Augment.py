@@ -225,7 +225,7 @@ def add_reverberation(path,new_path,audio,fs):
     # 绘制其中一个RIR. both can also be plotted using room.plot_rir()
     file = os.listdir(new_path)
     file_new = os.listdir(file)
-    print("hello")
+    print("hello WORLD")
     for i in range(len(file_new)):
         file_name = os.path.join(new_path, file_new[i])
         audio_new, fs = librosa.load(file_name, sr=None)
