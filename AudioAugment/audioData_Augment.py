@@ -179,7 +179,7 @@ def show_timeShift(audio,fs):
         plt.tight_layout()
     plt.show()
 
-def add_reverberation(path,new_path,audio,fs):
+def add_reverberation(path,new_path,file_name,audio,fs,i):
 # 给声音加混响 Image Source Method（镜像源方法）来实现语音加混响
 # 1. 创建房间（定义房间大小、所需的混响时间、墙面材料、允许的最大反射次数、）
 # 2. 在房间内创建信号源
@@ -198,7 +198,6 @@ def add_reverberation(path,new_path,audio,fs):
     # max_order = 3
     room = pra.ShoeBox(room_dim,fs=fs,materials=pra.Material(e_absorption),max_order=max_order)
     # 2. 在房间内创建一个位于[2.5,3.73,1.76]的源，从0.3秒开始向仿真中发出wav文件的内容
-    audio,_ = librosa.load(audio,sr=fs)
     room.add_source([2.5,3.73,1.76],signal=audio,delay=0.3)
     # 3. 在房间内创建麦克风
     # 定义麦克风的位置：（ndim,nmics）即每个列包含一个麦克风的坐标
@@ -214,37 +213,35 @@ def add_reverberation(path,new_path,audio,fs):
     # 5. 模拟声音传播 每个源的信号将与相应的房间脉冲响应进行卷积。卷积的输出将在麦克风上求和
     room.simulate() #room.simulate(reference_mic=0, snr=10)      # 控制信噪比
     # 保存所有的信号到wav文件
-    file_name = "inverse_" + audio[-7:-4] + ".wav"
+    file_name = "inverse_" + os.path.basename(file_name)[-7:-4] + ".wav"
     # out_path = os.path.join(path, file_name)
-    save_file(path)
-    room.mic_array.to_wav(os.path.join(path,file_name), norm=True, bitdepth=np.float32,)
+    save_file(new_path)
+    room.mic_array.to_wav(os.path.join(new_path,file_name), norm=True, bitdepth=np.float32,)
     # 测量混响时间
     rt60 = room.measure_rt60()
     print("The desired RT60 was {}".format(rt60_tgt))
     print("The measured RT60 is {}".format(rt60[1, 0]))
     # 绘制其中一个RIR. both can also be plotted using room.plot_rir()
-    file = os.listdir(new_path)
-    file_new = os.listdir(file)
+    file_new = os.listdir(new_path)
     print("hello WORLD")
-    for i in range(len(file_new)):
-        file_name = os.path.join(new_path, file_new[i])
-        audio_new, fs = librosa.load(file_name, sr=None)
-        print(file_name)
-        figure = plt.figure(figsize=(6, 2))
-        figure.add_subplot(2, 2, 1)
-        plt.title("original_wave")
-        librosa.display.waveplot(audio[i],sr=fs)
-        figure.add_subplot(2, 2, 2)
-        plt.title("add_inverseWave")
-        librosa.display.waveplot(audio_new[i], sr=fs)
-        figure.add_subplot(2, 2, 3)
-        D = librosa.stft(audio, n_fft=480, hop_length=160, win_length=480, window="hann")
-        librosa.display.specshow(librosa.amplitude_to_db(np.abs(D)))
-        plt.title("original_spec")
-        figure.add_subplot(2, 2, 4)
-        D = librosa.stft(audio_new, n_fft=480, hop_length=160, win_length=480, window="hann")
-        librosa.display.specshow(librosa.amplitude_to_db(np.abs(D)))
-        plt.title("add_inverseSpec")
-        plt.tight_layout()
+    file_name = os.path.join(new_path, file_new[i])
+    audio_new, fs = librosa.load(file_name, sr=None)
+    print(file_name)
+    figure = plt.figure(figsize=(6, 3))
+    figure.add_subplot(2, 2, 1)
+    plt.title("original_wave")
+    librosa.display.waveplot(audio,sr=fs)
+    figure.add_subplot(2, 2, 2)
+    plt.title("add_inverseWave")
+    librosa.display.waveplot(audio_new, sr=fs)
+    figure.add_subplot(2, 2, 3)
+    D = librosa.stft(audio, n_fft=480, hop_length=160, win_length=480, window="hann")
+    librosa.display.specshow(librosa.amplitude_to_db(np.abs(D)))
+    plt.title("original_spec")
+    figure.add_subplot(2, 2, 4)
+    D = librosa.stft(audio_new, n_fft=480, hop_length=160, win_length=480, window="hann")
+    librosa.display.specshow(librosa.amplitude_to_db(np.abs(D)))
+    plt.title("add_inverseSpec")
+    plt.tight_layout()
     plt.show()
 
